@@ -1,0 +1,21 @@
+# Dependencias
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Variables de entorno (contienen datos sensibles)
+server/.env
+
+# Archivos subidos por usuarios
+server/uploads/
+
+# Build del cliente
+client/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

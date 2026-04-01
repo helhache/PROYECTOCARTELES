@@ -1,0 +1,10 @@
+{
+  "tipo": "supercombo",
+  "colorFondo": "#7B2D8B",
+  "colorTexto": "#FFFFFF",
+  "colorPrecio": "#FFD700",
+  "colorEtiqueta": "#FFD700",
+  "fontSizePrecio": "72px",
+  "fontSizeNombre": "32px",
+  "etiqueta": "¡SUPER COMBO!"
+}

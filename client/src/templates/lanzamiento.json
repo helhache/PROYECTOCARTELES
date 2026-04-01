@@ -1,0 +1,10 @@
+{
+  "tipo": "lanzamiento",
+  "colorFondo": "#1a1a8e",
+  "colorTexto": "#FFFFFF",
+  "colorPrecio": "#00E5FF",
+  "colorEtiqueta": "#00E5FF",
+  "fontSizePrecio": "72px",
+  "fontSizeNombre": "32px",
+  "etiqueta": "¡NUEVO LANZAMIENTO!"
+}
