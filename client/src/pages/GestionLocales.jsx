@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getImgUrl } from '../config.js';
 
 // Página para administrar locales: ver, crear y editar
 function GestionLocales() {
@@ -45,7 +46,7 @@ function GestionLocales() {
     setEditando(local);
     setForm({ nombre: local.nombre, direccion: local.direccion || '' });
     setArchivoLogo(null);
-    setPreviewLogo(local.logo || '');
+    setPreviewLogo(getImgUrl(local.logo));
     setModalAbierto(true);
   };
 
@@ -114,7 +115,7 @@ function GestionLocales() {
           {locales.map((local) => (
             <div key={local._id} className="item-card">
               {local.logo ? (
-                <img src={local.logo} alt={local.nombre} className="item-card-img" />
+                <img src={getImgUrl(local.logo)} alt={local.nombre} className="item-card-img" />
               ) : (
                 <div className="item-card-img-placeholder">🏪</div>
               )}

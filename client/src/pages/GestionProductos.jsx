@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getImgUrl } from '../config.js';
 
 // Página para administrar productos: ver, crear, editar con imagen
 function GestionProductos() {
@@ -55,7 +56,7 @@ function GestionProductos() {
       local: producto.local?._id || '',
     });
     setArchivoImagen(null);
-    setPreviewImagen(producto.imagen || '');
+    setPreviewImagen(getImgUrl(producto.imagen));
     setModalAbierto(true);
   };
 
@@ -126,7 +127,7 @@ function GestionProductos() {
           {productos.map((prod) => (
             <div key={prod._id} className="item-card">
               {prod.imagen ? (
-                <img src={prod.imagen} alt={prod.nombre} className="item-card-img" />
+                <img src={getImgUrl(prod.imagen)} alt={prod.nombre} className="item-card-img" />
               ) : (
                 <div className="item-card-img-placeholder">📦</div>
               )}

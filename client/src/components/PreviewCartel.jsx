@@ -1,3 +1,5 @@
+import { getImgUrl } from '../config.js';
+
 // Importar templates JSON
 import templatePromo from '../templates/promo.json';
 import templateAhorro from '../templates/ahorro.json';
@@ -73,7 +75,7 @@ function PreviewCartel({ datos }) {
           {/* Logo del local */}
           {datos.local?.logo ? (
             <img
-              src={datos.local.logo}
+              src={getImgUrl(datos.local.logo)}
               alt={datos.local.nombre}
               className="cartel-logo-local"
             />
@@ -92,7 +94,7 @@ function PreviewCartel({ datos }) {
           {/* Imagen del producto: primero la subida manualmente, luego la de la DB */}
           {(datos.imagenProductoCustom || datos.imagenProducto) && (
             <img
-              src={datos.imagenProductoCustom || datos.imagenProducto}
+              src={datos.imagenProductoCustom || getImgUrl(datos.imagenProducto)}
               alt={datos.nombreProducto}
               className="cartel-img-producto"
             />

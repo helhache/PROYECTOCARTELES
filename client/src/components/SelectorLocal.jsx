@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getImgUrl } from '../config.js';
 
 // Selector de local con logo - carga desde la API
 function SelectorLocal({ localSeleccionado, onChange }) {
@@ -53,7 +54,7 @@ function SelectorLocal({ localSeleccionado, onChange }) {
             {/* Logo del local si existe */}
             {local.logo ? (
               <img
-                src={local.logo}
+                src={getImgUrl(local.logo)}
                 alt={local.nombre}
                 style={{ width: 32, height: 32, objectFit: 'contain', borderRadius: 4 }}
               />
