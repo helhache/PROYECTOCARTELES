@@ -1,40 +1,27 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
-
-// Servir archivos estáticos (logos y fotos de productos subidos)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rutas
-const productosRoutes = require('./routes/productos');
-const localesRoutes = require('./routes/locales');
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/locales', require('./routes/locales'));
+app.use('/api/productos', require('./routes/productos'));
+app.use('/api/activaciones', require('./routes/activaciones'));
+app.use('/api/asignaciones', require('./routes/asignaciones'));
+app.use('/api/usuarios', require('./routes/usuarios'));
 
-app.use('/api/productos', productosRoutes);
-app.use('/api/locales', localesRoutes);
-
-// Ruta de prueba
 app.get('/', (req, res) => {
-  res.json({ mensaje: 'API Generador de Carteles funcionando correctamente' });
+  res.json({ mensaje: 'API Generador de Carteles v2.0 funcionando' });
 });
 
-// Conexión a MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ Conectado a MongoDB:', process.env.MONGO_URI);
-    app.listen(process.env.PORT, () => {
-      console.log(`🚀 Servidor corriendo en http://localhost:${process.env.PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('❌ Error conectando a MongoDB:', err.message);
-    process.exit(1);
-  });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});

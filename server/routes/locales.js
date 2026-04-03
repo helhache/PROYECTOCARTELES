@@ -3,9 +3,10 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const Local = require('../models/Local');
+const db = require('../db');
+const { verificarToken, soloAdmin } = require('../middleware/auth');
 
-// Configuración de Multer para subir logos
+// Configuración de Multer para logos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, '../uploads/logos');
@@ -13,82 +14,83 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const nombre = `logo_${Date.now()}${ext}`;
-    cb(null, nombre);
+    cb(null, `logo_${Date.now()}${path.extname(file.originalname)}`);
   },
 });
 
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const tipos = /jpeg|jpg|png|gif|webp|svg/;
-    const valido = tipos.test(path.extname(file.originalname).toLowerCase());
-    if (valido) cb(null, true);
+    if (/jpeg|jpg|png|gif|webp|svg/.test(path.extname(file.originalname).toLowerCase()))
+      cb(null, true);
     else cb(new Error('Solo se permiten imágenes'));
   },
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB máximo
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// GET /api/locales - Obtener todos los locales activos
+// GET /api/locales — público (el login necesita saber los locales para el formulario de usuario)
 router.get('/', async (req, res) => {
   try {
-    const locales = await Local.find({ activo: true }).sort({ nombre: 1 });
-    res.json(locales);
+    const [rows] = await db.query('SELECT * FROM locales WHERE activo = 1 ORDER BY nombre');
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener locales', detalle: err.message });
   }
 });
 
-// GET /api/locales/:id - Obtener un local por ID
+// GET /api/locales/:id
 router.get('/:id', async (req, res) => {
   try {
-    const local = await Local.findById(req.params.id);
-    if (!local) return res.status(404).json({ error: 'Local no encontrado' });
-    res.json(local);
+    const [rows] = await db.query('SELECT * FROM locales WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Local no encontrado' });
+    res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener el local', detalle: err.message });
+    res.status(500).json({ error: 'Error al obtener local', detalle: err.message });
   }
 });
 
-// POST /api/locales - Crear nuevo local (con logo opcional)
-router.post('/', upload.single('logo'), async (req, res) => {
+// POST /api/locales — solo ADMIN
+router.post('/', verificarToken, soloAdmin, upload.single('logo'), async (req, res) => {
   try {
-    const { nombre, direccion } = req.body;
-    const logoPath = req.file ? `/uploads/logos/${req.file.filename}` : null;
-
-    const local = new Local({ nombre, direccion, logo: logoPath });
-    await local.save();
-    res.status(201).json(local);
+    const { nombre } = req.body;
+    const logo = req.file ? `/uploads/logos/${req.file.filename}` : null;
+    const [result] = await db.query(
+      'INSERT INTO locales (nombre, logo) VALUES (?, ?)',
+      [nombre, logo]
+    );
+    const [rows] = await db.query('SELECT * FROM locales WHERE id = ?', [result.insertId]);
+    res.status(201).json(rows[0]);
   } catch (err) {
     res.status(400).json({ error: 'Error al crear local', detalle: err.message });
   }
 });
 
-// PUT /api/locales/:id - Actualizar local
-router.put('/:id', upload.single('logo'), async (req, res) => {
+// PUT /api/locales/:id — solo ADMIN
+router.put('/:id', verificarToken, soloAdmin, upload.single('logo'), async (req, res) => {
   try {
-    const { nombre, direccion } = req.body;
-    const updates = { nombre, direccion };
+    const { nombre } = req.body;
+    const campos = ['nombre = ?'];
+    const valores = [nombre];
 
     if (req.file) {
-      updates.logo = `/uploads/logos/${req.file.filename}`;
+      campos.push('logo = ?');
+      valores.push(`/uploads/logos/${req.file.filename}`);
     }
 
-    const local = await Local.findByIdAndUpdate(req.params.id, updates, { new: true });
-    if (!local) return res.status(404).json({ error: 'Local no encontrado' });
-    res.json(local);
+    valores.push(req.params.id);
+    await db.query(`UPDATE locales SET ${campos.join(', ')} WHERE id = ?`, valores);
+    const [rows] = await db.query('SELECT * FROM locales WHERE id = ?', [req.params.id]);
+    res.json(rows[0]);
   } catch (err) {
     res.status(400).json({ error: 'Error al actualizar local', detalle: err.message });
   }
 });
 
-// DELETE /api/locales/:id - Desactivar local (soft delete)
-router.delete('/:id', async (req, res) => {
+// DELETE /api/locales/:id — solo ADMIN (soft delete)
+router.delete('/:id', verificarToken, soloAdmin, async (req, res) => {
   try {
-    const local = await Local.findByIdAndUpdate(req.params.id, { activo: false }, { new: true });
-    if (!local) return res.status(404).json({ error: 'Local no encontrado' });
-    res.json({ mensaje: 'Local desactivado correctamente' });
+    await db.query('UPDATE locales SET activo = 0 WHERE id = ?', [req.params.id]);
+    res.json({ mensaje: 'Local desactivado' });
   } catch (err) {
     res.status(500).json({ error: 'Error al eliminar local', detalle: err.message });
   }

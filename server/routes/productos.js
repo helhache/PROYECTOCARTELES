@@ -3,9 +3,9 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const Producto = require('../models/Producto');
+const db = require('../db');
+const { verificarToken, soloAdmin } = require('../middleware/auth');
 
-// Configuración de Multer para subir imágenes de productos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, '../uploads/productos');
@@ -13,102 +13,52 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const nombre = `producto_${Date.now()}${ext}`;
-    cb(null, nombre);
+    cb(null, `producto_${Date.now()}${path.extname(file.originalname)}`);
   },
 });
 
 const upload = multer({
   storage,
   fileFilter: (req, file, cb) => {
-    const tipos = /jpeg|jpg|png|gif|webp/;
-    const valido = tipos.test(path.extname(file.originalname).toLowerCase());
-    if (valido) cb(null, true);
+    if (/jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase()))
+      cb(null, true);
     else cb(new Error('Solo se permiten imágenes'));
   },
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB máximo
+  limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-// GET /api/productos - Obtener todos los productos activos
+// GET /api/productos — público
 router.get('/', async (req, res) => {
   try {
-    const { local, categoria } = req.query;
-    const filtro = { activo: true };
-    if (local) filtro.local = local;
-    if (categoria) filtro.categoria = categoria;
-
-    const productos = await Producto.find(filtro).populate('local', 'nombre logo').sort({ nombre: 1 });
-    res.json(productos);
+    const [rows] = await db.query(
+      'SELECT * FROM activaciones WHERE activo = 1 ORDER BY descripcion'
+    );
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener productos', detalle: err.message });
   }
 });
 
-// GET /api/productos/:id - Obtener un producto por ID
+// GET /api/productos/:id
 router.get('/:id', async (req, res) => {
   try {
-    const producto = await Producto.findById(req.params.id).populate('local', 'nombre logo');
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(producto);
+    const [rows] = await db.query('SELECT * FROM activaciones WHERE id = ?', [req.params.id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'No encontrado' });
+    res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ error: 'Error al obtener el producto', detalle: err.message });
+    res.status(500).json({ error: 'Error al obtener producto', detalle: err.message });
   }
 });
 
-// POST /api/productos - Crear nuevo producto
-router.post('/', upload.single('imagen'), async (req, res) => {
+// POST /api/productos/imagen — subir imagen para una activación (solo ADMIN)
+router.post('/imagen/:id', verificarToken, soloAdmin, upload.single('imagen'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No se recibió imagen' });
   try {
-    const { nombre, precio, categoria, local } = req.body;
-    const imagenPath = req.file ? `/uploads/productos/${req.file.filename}` : null;
-
-    const producto = new Producto({
-      nombre,
-      precio: parseFloat(precio),
-      categoria,
-      local: local || null,
-      imagen: imagenPath,
-    });
-
-    await producto.save();
-    const populado = await Producto.findById(producto._id).populate('local', 'nombre logo');
-    res.status(201).json(populado);
+    const imgPath = `/uploads/productos/${req.file.filename}`;
+    await db.query('UPDATE activaciones SET imagen = ? WHERE id = ?', [imgPath, req.params.id]);
+    res.json({ imagen: imgPath });
   } catch (err) {
-    res.status(400).json({ error: 'Error al crear producto', detalle: err.message });
-  }
-});
-
-// PUT /api/productos/:id - Actualizar producto
-router.put('/:id', upload.single('imagen'), async (req, res) => {
-  try {
-    const { nombre, precio, categoria, local } = req.body;
-    const updates = {
-      nombre,
-      precio: parseFloat(precio),
-      categoria,
-      local: local || null,
-    };
-
-    if (req.file) {
-      updates.imagen = `/uploads/productos/${req.file.filename}`;
-    }
-
-    const producto = await Producto.findByIdAndUpdate(req.params.id, updates, { new: true }).populate('local', 'nombre logo');
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json(producto);
-  } catch (err) {
-    res.status(400).json({ error: 'Error al actualizar producto', detalle: err.message });
-  }
-});
-
-// DELETE /api/productos/:id - Desactivar producto (soft delete)
-router.delete('/:id', async (req, res) => {
-  try {
-    const producto = await Producto.findByIdAndUpdate(req.params.id, { activo: false }, { new: true });
-    if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
-    res.json({ mensaje: 'Producto eliminado correctamente' });
-  } catch (err) {
-    res.status(500).json({ error: 'Error al eliminar producto', detalle: err.message });
+    res.status(500).json({ error: 'Error al subir imagen', detalle: err.message });
   }
 });
 
