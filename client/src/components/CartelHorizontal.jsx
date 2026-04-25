@@ -1,6 +1,4 @@
-// Cartel horizontal: diseño de la propuesta del jefe
-// Dos logos (Coca-Cola izq, local der), mensaje centro, precio, imagen producto a los costados
-
+// Cartel horizontal: logo Coca-Cola izq, logo local der, contenido al centro
 const LOGO_COCA = '/uploads/logos/coca_cola_logo.png';
 
 export default function CartelHorizontal({ datos }) {
@@ -13,7 +11,8 @@ export default function CartelHorizontal({ datos }) {
     return `$${Number(p).toLocaleString('es-AR')}`;
   };
 
-  const filtroGris = esColor ? 'none' : 'grayscale(100%)';
+  // En color: rojo. En B&N: negro puro. Sin filtro grayscale.
+  const acento = esColor ? '#cc0000' : '#111111';
 
   return (
     <div
@@ -21,14 +20,13 @@ export default function CartelHorizontal({ datos }) {
       style={{
         width: 594,
         height: 420,
-        background: esColor ? '#fff' : '#f0f0f0',
+        background: '#ffffff',
         display: 'flex',
         flexDirection: 'column',
         fontFamily: "'Inter', 'Arial', sans-serif",
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-        filter: filtroGris,
       }}
     >
       {/* Cabecera: logo Coca-Cola (izq) + logo local (der) */}
@@ -36,7 +34,8 @@ export default function CartelHorizontal({ datos }) {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '16px 24px 8px',
+        padding: '14px 20px 10px',
+        borderBottom: `3px solid ${acento}`,
       }}>
         <img
           src={LOGO_COCA}
@@ -67,19 +66,19 @@ export default function CartelHorizontal({ datos }) {
         flex: 1,
         display: 'flex',
         alignItems: 'center',
-        padding: '0 12px',
-        gap: 8,
+        padding: '8px 16px',
+        gap: 12,
       }}>
         {/* Imagen producto izquierda */}
-        <div style={{ width: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 140, height: 190, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {imagen ? (
             <img
               src={imagen}
               alt="Producto"
-              style={{ maxWidth: '100%', maxHeight: 180, objectFit: 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 3px 10px rgba(0,0,0,0.2))' }}
             />
           ) : (
-            <div style={{ width: 100, height: 140, background: '#e8e8e8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#bbb' }}>
+            <div style={{ width: '100%', height: '100%', background: '#f0f0f0', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', color: '#ccc' }}>
               📦
             </div>
           )}
@@ -87,33 +86,32 @@ export default function CartelHorizontal({ datos }) {
 
         {/* Texto central */}
         <div style={{ flex: 1, textAlign: 'center', padding: '0 8px' }}>
-          {/* Dinámica */}
           {dinamica && (
             <div style={{
-              fontSize: '0.85rem', fontWeight: 700, color: '#cc0000',
-              textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4,
+              fontSize: '1.35rem',
+              fontWeight: 800,
+              color: acento,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 8,
             }}>
               {dinamica}
             </div>
           )}
-
-          {/* Descripción */}
           <div style={{
-            fontSize: descripcion?.length > 50 ? '1.05rem' : '1.3rem',
+            fontSize: descripcion?.length > 50 ? '1.35rem' : '1.75rem',
             fontWeight: 900,
             color: '#1a1a1a',
             textTransform: 'uppercase',
             lineHeight: 1.15,
-            marginBottom: 12,
+            marginBottom: 14,
           }}>
             {descripcion || 'NOMBRE DEL PRODUCTO'}
           </div>
-
-          {/* Precio */}
           <div style={{
-            fontSize: '2.2rem',
+            fontSize: '2.8rem',
             fontWeight: 900,
-            color: '#cc0000',
+            color: acento,
             lineHeight: 1,
           }}>
             {formatPrecio(precio)}
@@ -121,15 +119,15 @@ export default function CartelHorizontal({ datos }) {
         </div>
 
         {/* Imagen producto derecha */}
-        <div style={{ width: 130, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 140, height: 190, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {imagen ? (
             <img
               src={imagen}
               alt="Producto"
-              style={{ maxWidth: '100%', maxHeight: 180, objectFit: 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'drop-shadow(0 3px 10px rgba(0,0,0,0.2))' }}
             />
           ) : (
-            <div style={{ width: 100, height: 140, background: '#e8e8e8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#bbb' }}>
+            <div style={{ width: '100%', height: '100%', background: '#f0f0f0', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', color: '#ccc' }}>
               📦
             </div>
           )}
