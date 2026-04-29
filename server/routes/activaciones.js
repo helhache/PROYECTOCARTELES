@@ -22,7 +22,9 @@ const storageImg = multer.diskStorage({
 // Multer para Excel
 const storageExcel = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../uploads'));
+    const dir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
   },
   filename: (req, file, cb) => {
     cb(null, `excel_${Date.now()}${path.extname(file.originalname)}`);
