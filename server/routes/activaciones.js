@@ -6,20 +6,11 @@ const fs = require('fs');
 const XLSX = require('xlsx');
 const db = require('../db');
 const { verificarToken, soloAdmin } = require('../middleware/auth');
+const { storageActivacion } = require('../cloudinary');
 
-// Multer para imagen de activación
-const storageImg = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../uploads/activaciones');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `act_${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
+const uploadImg = multer({ storage: storageActivacion, limits: { fileSize: 10 * 1024 * 1024 } });
 
-// Multer para Excel
+// Multer para Excel — sigue usando disco local (archivo temporal que se borra después)
 const storageExcel = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, '../uploads');
@@ -30,8 +21,6 @@ const storageExcel = multer.diskStorage({
     cb(null, `excel_${Date.now()}${path.extname(file.originalname)}`);
   },
 });
-
-const uploadImg = multer({ storage: storageImg, limits: { fileSize: 10 * 1024 * 1024 } });
 const uploadExcel = multer({ storage: storageExcel });
 
 // Convierte número serial de Excel a fecha JS
@@ -83,7 +72,7 @@ router.get('/:id', verificarToken, async (req, res) => {
 router.post('/', verificarToken, soloAdmin, uploadImg.single('imagen'), async (req, res) => {
   try {
     const { tipo, desde, hasta, ean, descripcion, dinamica, dcto, precio_sugerido, precio_oferta } = req.body;
-    const imagen = req.file ? `/uploads/activaciones/${req.file.filename}` : null;
+    const imagen = req.file ? req.file.path : null;
 
     const [result] = await db.query(
       `INSERT INTO activaciones (tipo, desde, hasta, ean, descripcion, dinamica, dcto, precio_sugerido, precio_oferta, imagen)
@@ -114,7 +103,7 @@ router.put('/:id', verificarToken, soloAdmin, uploadImg.single('imagen'), async 
     if (precio_sugerido !== undefined) { campos.push('precio_sugerido = ?'); valores.push(precio_sugerido || null); }
     if (precio_oferta !== undefined) { campos.push('precio_oferta = ?'); valores.push(precio_oferta || null); }
     if (activo !== undefined) { campos.push('activo = ?'); valores.push(activo ? 1 : 0); }
-    if (req.file) { campos.push('imagen = ?'); valores.push(`/uploads/activaciones/${req.file.filename}`); }
+    if (req.file) { campos.push('imagen = ?'); valores.push(req.file.path); }
 
     if (campos.length === 0) return res.status(400).json({ error: 'Nada para actualizar' });
 

@@ -1,32 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const db = require('../db');
 const { verificarToken, soloAdmin } = require('../middleware/auth');
+const { storageLogo } = require('../cloudinary');
 
-// Configuración de Multer para logos
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../uploads/logos');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `logo_${Date.now()}${path.extname(file.originalname)}`);
-  },
-});
-
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (/jpeg|jpg|png|gif|webp|svg/.test(path.extname(file.originalname).toLowerCase()))
-      cb(null, true);
-    else cb(new Error('Solo se permiten imágenes'));
-  },
-  limits: { fileSize: 5 * 1024 * 1024 },
-});
+const upload = multer({ storage: storageLogo, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // GET /api/locales — público (el login necesita saber los locales para el formulario de usuario)
 router.get('/', async (req, res) => {
@@ -53,7 +32,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', verificarToken, soloAdmin, upload.single('logo'), async (req, res) => {
   try {
     const { nombre } = req.body;
-    const logo = req.file ? `/uploads/logos/${req.file.filename}` : null;
+    const logo = req.file ? req.file.path : null;
     const [result] = await db.query(
       'INSERT INTO locales (nombre, logo) VALUES (?, ?)',
       [nombre, logo]
@@ -74,7 +53,7 @@ router.put('/:id', verificarToken, soloAdmin, upload.single('logo'), async (req,
 
     if (req.file) {
       campos.push('logo = ?');
-      valores.push(`/uploads/logos/${req.file.filename}`);
+      valores.push(req.file.path);
     }
 
     valores.push(req.params.id);

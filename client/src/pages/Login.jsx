@@ -42,7 +42,7 @@ export default function Login() {
         {/* Logo Coca-Cola */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
           <img
-            src="/uploads/logos/coca_cola_logo.png"
+            src="/coca_cola_logo.png"
             alt="Coca-Cola"
             style={{ height: 60, objectFit: 'contain' }}
             onError={(e) => { e.target.style.display = 'none'; }}

@@ -1,5 +1,5 @@
 // Cartel horizontal: logo Coca-Cola izq, logo local der, contenido al centro
-const LOGO_COCA = '/uploads/logos/coca_cola_logo.png';
+const LOGO_COCA = '/coca_cola_logo.png';
 
 export default function CartelHorizontal({ datos }) {
   if (!datos) return null;

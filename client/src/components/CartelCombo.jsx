@@ -1,4 +1,4 @@
-const LOGO_COCA = '/uploads/logos/coca_cola_logo.png';
+const LOGO_COCA = '/coca_cola_logo.png';
 
 export default function CartelCombo({ datos }) {
   if (!datos) return null;
