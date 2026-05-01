@@ -6,7 +6,9 @@ export default function RutaProtegida({ children, rolRequerido }) {
 
   if (!usuario) return <Navigate to="/login" replace />;
   if (rolRequerido && usuario.rol !== rolRequerido) {
-    return <Navigate to={usuario.rol === 'ADMIN' ? '/admin' : '/local'} replace />;
+    if (usuario.rol === 'ADMIN') return <Navigate to="/admin" replace />;
+    if (usuario.rol === 'REPOSITOR') return <Navigate to="/repositor" replace />;
+    return <Navigate to="/local" replace />;
   }
 
   return children;

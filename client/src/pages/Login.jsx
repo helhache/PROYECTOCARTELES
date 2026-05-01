@@ -15,7 +15,9 @@ export default function Login() {
     setCargando(true);
     try {
       const usuario = await login(form.username, form.password);
-      navigate(usuario.rol === 'ADMIN' ? '/admin' : '/local');
+      if (usuario.rol === 'ADMIN') navigate('/admin');
+      else if (usuario.rol === 'REPOSITOR') navigate('/repositor');
+      else navigate('/local');
     } catch (err) {
       setError(err.response?.data?.error || 'Error al iniciar sesión');
     } finally {

@@ -16,6 +16,9 @@ import AdminEditor from './pages/admin/AdminEditor';
 import LocalLayout from './pages/local/LocalLayout';
 import LocalPanel from './pages/local/LocalPanel';
 
+import RepositorLayout from './pages/repositor/RepositorLayout';
+import RepositorPanel from './pages/repositor/RepositorPanel';
+
 function App() {
   return (
     <AuthProvider>
@@ -33,6 +36,9 @@ function App() {
 
         {/* Rutas LOCAL */}
         <Route path="/local" element={<RutaProtegida rolRequerido="LOCAL"><LocalLayout><LocalPanel /></LocalLayout></RutaProtegida>} />
+
+        {/* Rutas REPOSITOR */}
+        <Route path="/repositor" element={<RutaProtegida rolRequerido="REPOSITOR"><RepositorLayout><RepositorPanel /></RepositorLayout></RutaProtegida>} />
 
         {/* Raíz → login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

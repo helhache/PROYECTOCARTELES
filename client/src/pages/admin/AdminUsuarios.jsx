@@ -39,7 +39,7 @@ export default function AdminUsuarios() {
     const body = {
       username: form.username,
       rol: form.rol,
-      local_id: form.rol === 'LOCAL' ? form.local_id : null,
+      local_id: (form.rol === 'LOCAL' || form.rol === 'REPOSITOR') ? form.local_id : null,
     };
     if (form.password) body.password = form.password;
 
@@ -63,8 +63,8 @@ export default function AdminUsuarios() {
   };
 
   const badgeRol = (rol) => ({
-    background: rol === 'ADMIN' ? '#e53e3e20' : '#6c63ff20',
-    color: rol === 'ADMIN' ? '#fc8181' : '#a78bfa',
+    background: rol === 'ADMIN' ? '#e53e3e20' : rol === 'REPOSITOR' ? '#dd6b2020' : '#6c63ff20',
+    color: rol === 'ADMIN' ? '#fc8181' : rol === 'REPOSITOR' ? '#f6ad55' : '#a78bfa',
     padding: '2px 8px',
     borderRadius: 4,
     fontSize: '0.75rem',
@@ -123,11 +123,12 @@ export default function AdminUsuarios() {
             <div className="form-group">
               <label className="form-label">Rol</label>
               <select className="form-control" value={form.rol} onChange={e => setForm(p => ({ ...p, rol: e.target.value }))}>
-                <option value="LOCAL">LOCAL</option>
-                <option value="ADMIN">ADMIN</option>
+                <option value="LOCAL">LOCAL — Encargado de comercio</option>
+                <option value="REPOSITOR">REPOSITOR — Repositor de tienda</option>
+                <option value="ADMIN">ADMIN — Gerente Coca-Cola</option>
               </select>
             </div>
-            {form.rol === 'LOCAL' && (
+            {(form.rol === 'LOCAL' || form.rol === 'REPOSITOR') && (
               <div className="form-group">
                 <label className="form-label">Local asignado</label>
                 <select className="form-control" value={form.local_id} onChange={e => setForm(p => ({ ...p, local_id: e.target.value }))}>
