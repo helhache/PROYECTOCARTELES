@@ -8,22 +8,15 @@ export default function AdminInicio() {
   const [ultimasDescargas, setUltimasDescargas] = useState([]);
 
   useEffect(() => {
-    Promise.all([
-      axios.get('/api/locales'),
-      axios.get('/api/activaciones'),
-      axios.get('/api/usuarios'),
-      axios.get('/api/asignaciones/log'),
-    ]).then(([loc, act, usr, log]) => {
-      setStats({
-        locales: loc.data.length,
-        activaciones: act.data.length,
-        usuarios: usr.data.length,
-        descargas: log.data.length,
-      });
-      // Últimas 8 activaciones (más recientes por fecha hasta)
-      setRecientes([...act.data].sort((a, b) => new Date(b.hasta) - new Date(a.hasta)).slice(0, 8));
-      // Últimas 6 descargas
-      setUltimasDescargas(log.data.slice(0, 6));
+    axios.get('/api/locales').then(r => setStats(p => ({ ...p, locales: r.data.length }))).catch(() => {});
+    axios.get('/api/activaciones').then(r => {
+      setStats(p => ({ ...p, activaciones: r.data.length }));
+      setRecientes([...r.data].sort((a, b) => new Date(b.hasta) - new Date(a.hasta)).slice(0, 8));
+    }).catch(() => {});
+    axios.get('/api/usuarios').then(r => setStats(p => ({ ...p, usuarios: r.data.length }))).catch(() => {});
+    axios.get('/api/asignaciones/log').then(r => {
+      setStats(p => ({ ...p, descargas: r.data.length }));
+      setUltimasDescargas(r.data.slice(0, 6));
     }).catch(() => {});
   }, []);
 
