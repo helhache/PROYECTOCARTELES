@@ -94,6 +94,28 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// DELETE /api/usuarios/borrar/:id — elimina permanentemente de la BD
+router.delete('/borrar/:id', async (req, res) => {
+  try {
+    // Eliminar registros relacionados antes de borrar el usuario
+    const [[repo]] = await db.query('SELECT id FROM repositores WHERE usuario_id = ?', [req.params.id]);
+    if (repo) {
+      // Eliminar cambio_items antes de cambios (FK ON DELETE RESTRICT en cambios)
+      await db.query('DELETE ci FROM cambio_items ci INNER JOIN cambios c ON ci.cambio_id = c.id WHERE c.repositor_id = ?', [repo.id]);
+      await db.query('DELETE FROM cambios WHERE repositor_id = ?', [repo.id]);
+      await db.query('DELETE FROM repositores_locales WHERE repositor_id = ?', [repo.id]);
+      await db.query('DELETE FROM repositores WHERE id = ?', [repo.id]);
+    }
+    // Eliminar reclamos del usuario (FK ON DELETE RESTRICT en reclamos)
+    await db.query('DELETE FROM reclamos WHERE remitente_id = ?', [req.params.id]);
+    await db.query('DELETE FROM usuarios_locales WHERE usuario_id = ?', [req.params.id]);
+    await db.query('DELETE FROM usuarios WHERE id = ?', [req.params.id]);
+    res.json({ mensaje: 'Usuario eliminado' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar usuario', detalle: err.message });
+  }
+});
+
 // DELETE /api/usuarios/:id (desactivar)
 router.delete('/:id', async (req, res) => {
   try {

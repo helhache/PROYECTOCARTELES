@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { NotifProvider } from './context/NotifContext';
 import RutaProtegida from './components/RutaProtegida';
 
 import Login from './pages/Login';
@@ -37,6 +38,7 @@ import RepositorReclamos from './pages/repositor/RepositorReclamos';
 
 function App() {
   return (
+    <NotifProvider>
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -72,6 +74,7 @@ function App() {
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </AuthProvider>
+    </NotifProvider>
   );
 }
 

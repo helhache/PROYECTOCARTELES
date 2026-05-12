@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNotif } from '../../context/NotifContext';
 
 const ROLES = [
   { value: 'ADMIN',     label: 'ADMIN — Control total' },
@@ -14,11 +15,12 @@ const colorRol = {
 };
 
 export default function AdminUsuarios() {
+  const { toast, confirmar } = useNotif();
   const [usuarios, setUsuarios] = useState([]);
   const [locales, setLocales] = useState([]);
   const [modal, setModal] = useState(false);
   const [editando, setEditando] = useState(null);
-  const [form, setForm] = useState({ username: '', password: '', rol: 'LOCAL', nombre_display: '', local_ids: [] });
+  const [form, setForm] = useState({ username: '', password: '', rol: 'LOCAL', nombre_display: '', local_ids: [], repo_nombre: '', repo_apellido: '', repo_numero: '' });
   const [error, setError] = useState('');
 
   const cargar = async () => {
@@ -31,7 +33,7 @@ export default function AdminUsuarios() {
 
   const abrirNuevo = () => {
     setEditando(null);
-    setForm({ username: '', password: '', rol: 'LOCAL', nombre_display: '', local_ids: [] });
+    setForm({ username: '', password: '', rol: 'LOCAL', nombre_display: '', local_ids: [], repo_nombre: '', repo_apellido: '', repo_numero: '' });
     setError('');
     setModal(true);
   };
@@ -63,6 +65,11 @@ export default function AdminUsuarios() {
     setError('');
     if (!form.username.trim()) return setError('El usuario es requerido');
     if (!editando && !form.password) return setError('La contraseña es requerida para usuarios nuevos');
+    if (!editando && form.rol === 'REPOSITOR') {
+      if (!form.repo_nombre.trim()) return setError('El nombre del repositor es requerido');
+      if (!form.repo_apellido.trim()) return setError('El apellido del repositor es requerido');
+      if (!form.repo_numero.trim()) return setError('El número de vendedor es requerido');
+    }
 
     const body = {
       username: form.username,
@@ -76,7 +83,16 @@ export default function AdminUsuarios() {
       if (editando) {
         await axios.put(`/api/usuarios/${editando.id}`, body);
       } else {
-        await axios.post('/api/usuarios', body);
+        const { data } = await axios.post('/api/usuarios', body);
+        // Si es REPOSITOR, crear también el perfil en la tabla repositores
+        if (form.rol === 'REPOSITOR') {
+          await axios.post('/api/repositores', {
+            usuario_id: data.id,
+            nombre: form.repo_nombre,
+            apellido: form.repo_apellido,
+            numero_vendedor: form.repo_numero,
+          });
+        }
       }
       setModal(false);
       cargar();
@@ -86,9 +102,21 @@ export default function AdminUsuarios() {
   };
 
   const desactivar = async (id) => {
-    if (!confirm('¿Desactivar este usuario?')) return;
+    if (!await confirmar('¿Desactivar este usuario?')) return;
     await axios.delete(`/api/usuarios/${id}`);
+    toast('Usuario desactivado', 'info');
     cargar();
+  };
+
+  const eliminar = async (id, username) => {
+    if (!await confirmar(`¿Eliminar permanentemente al usuario "${username}"? Esta acción no se puede deshacer.`, 'danger')) return;
+    try {
+      await axios.delete(`/api/usuarios/borrar/${id}`);
+      toast('Usuario eliminado', 'success');
+      cargar();
+    } catch (err) {
+      toast(err.response?.data?.error || 'Error al eliminar', 'error');
+    }
   };
 
   return (
@@ -126,9 +154,15 @@ export default function AdminUsuarios() {
               </td>
               <td style={{ padding: '0.75rem 1rem', display: 'flex', gap: '0.5rem' }}>
                 <button className="btn-editar" style={{ padding: '0.3rem 0.8rem' }} onClick={() => abrirEditar(u)}>Editar</button>
-                {u.activo ? (
+                {u.activo && (
                   <button className="btn-eliminar" style={{ padding: '0.3rem 0.8rem' }} onClick={() => desactivar(u.id)}>Desactivar</button>
-                ) : null}
+                )}
+                <button
+                  onClick={() => eliminar(u.id, u.username)}
+                  style={{ padding: '0.3rem 0.8rem', background: '#7f1d1d', border: '1px solid #991b1b', color: '#fca5a5', borderRadius: 6, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  Eliminar
+                </button>
               </td>
             </tr>
           ))}
@@ -167,6 +201,29 @@ export default function AdminUsuarios() {
                 {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               </select>
             </div>
+
+            {!editando && form.rol === 'REPOSITOR' && (
+              <>
+                <div style={{ background: '#6c63ff10', border: '1px solid #6c63ff30', borderRadius: 8, padding: '0.8rem 1rem', marginBottom: '0.5rem' }}>
+                  <p style={{ color: '#a78bfa', fontSize: '0.78rem', fontWeight: 600, margin: '0 0 0.8rem', textTransform: 'uppercase' }}>Datos del perfil repositor</p>
+                  <div className="form-group">
+                    <label className="form-label">Nombre *</label>
+                    <input className="form-control" value={form.repo_nombre} placeholder="Ej: Juan"
+                      onChange={e => setForm(p => ({ ...p, repo_nombre: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Apellido *</label>
+                    <input className="form-control" value={form.repo_apellido} placeholder="Ej: Pérez"
+                      onChange={e => setForm(p => ({ ...p, repo_apellido: e.target.value }))} />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Número de vendedor *</label>
+                    <input className="form-control" value={form.repo_numero} placeholder="Ej: 01"
+                      onChange={e => setForm(p => ({ ...p, repo_numero: e.target.value }))} />
+                  </div>
+                </div>
+              </>
+            )}
 
             {form.rol === 'LOCAL' && (
               <div className="form-group">

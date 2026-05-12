@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNotif } from '../../context/NotifContext';
 
 const PERIODOS = ['semanal', 'mensual', 'anual'];
 
@@ -16,6 +17,7 @@ const FORM_VACIO = {
 };
 
 export default function AdminObjetivos() {
+  const { toast, confirmar } = useNotif();
   const [objetivos, setObjetivos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -77,11 +79,12 @@ export default function AdminObjetivos() {
   }
 
   async function desactivar(id) {
-    if (!confirm('¿Desactivar este objetivo?')) return;
+    if (!await confirmar('¿Desactivar este objetivo?', 'danger')) return;
     try {
       await axios.delete(`/api/objetivos/${id}`);
+      toast('Objetivo desactivado', 'info');
       cargar();
-    } catch { setError('Error al desactivar'); }
+    } catch { toast('Error al desactivar', 'error'); }
   }
 
   // Agrupar por periodo para mostrar el vigente de cada tipo

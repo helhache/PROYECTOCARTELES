@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNotif } from '../../context/NotifContext';
 
 const ESTADOS = ['pendiente', 'aprobado', 'procesado', 'rechazado'];
 
@@ -11,6 +12,7 @@ const colorEstado = {
 };
 
 export default function AdminCambios() {
+  const { toast, confirmar } = useNotif();
   const [cambios, setCambios] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [modal, setModal] = useState(null);   // { cambio, detalle }
@@ -37,7 +39,7 @@ export default function AdminCambios() {
       setNota(data.nota_admin || '');
       setModal({ cambio: c, detalle: data });
     } catch {
-      alert('Error al cargar detalle');
+      toast('Error al cargar detalle', 'error');
     }
   }
 
@@ -53,7 +55,7 @@ export default function AdminCambios() {
       const { data } = await axios.get(`/api/cambios/${modal.cambio.id}`);
       setModal(prev => ({ ...prev, cambio: { ...prev.cambio, estado }, detalle: data }));
     } catch {
-      alert('Error al actualizar estado');
+      toast('Error al actualizar estado', 'error');
     } finally {
       setGuardando(false);
     }
@@ -269,8 +271,8 @@ export default function AdminCambios() {
                   setGuardando(true);
                   try {
                     await axios.put(`/api/cambios/${modal.cambio.id}/estado`, { estado: modal.cambio.estado, nota_admin: nota });
-                    alert('Nota guardada');
-                  } catch { alert('Error al guardar nota'); }
+                    toast('Nota guardada', 'success');
+                  } catch { toast('Error al guardar nota', 'error'); }
                   finally { setGuardando(false); }
                 }}
                 style={{ padding: '7px 18px', border: '1px solid #2d2d3d', borderRadius: 6, background: '#0f0f13', color: '#9090a0', fontWeight: 600, cursor: 'pointer', fontSize: '0.85rem' }}

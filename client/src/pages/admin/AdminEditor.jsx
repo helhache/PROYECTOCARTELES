@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNotif } from '../../context/NotifContext';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import CartelHorizontal from '../../components/CartelHorizontal.jsx';
@@ -63,6 +64,7 @@ function TabDescargas() {
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function AdminEditor() {
   const { usuario } = useAuth();
+  const { toast } = useNotif();
   const [tab, setTab] = useState('editor');
 
   const [locales, setLocales] = useState([]);
@@ -124,7 +126,7 @@ export default function AdminEditor() {
       const iW = nodo.offsetWidth * prop, iH = nodo.offsetHeight * prop;
       pdf.addImage(dataUrl, 'PNG', (pW - iW) / 2, (pH - iH) / 2, iW, iH);
       pdf.save(`cartel_${actSel.descripcion || 'cartel'}_${Date.now()}.pdf`.replace(/\s+/g, '_').toLowerCase());
-    } catch { alert('Error al generar PDF'); }
+    } catch { toast('Error al generar PDF', 'error'); }
     finally { setExportando(false); }
   };
 
@@ -136,7 +138,7 @@ export default function AdminEditor() {
       const a = document.createElement('a');
       a.download = `cartel_${actSel.descripcion || 'cartel'}_${Date.now()}.png`.replace(/\s+/g, '_').toLowerCase();
       a.href = dataUrl; a.click();
-    } catch { alert('Error al generar PNG'); }
+    } catch { toast('Error al generar PNG', 'error'); }
     finally { setExportando(false); }
   };
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNotif } from '../../context/NotifContext';
 
 const TIPOS_TAREA = [
   { value: 'foto',   label: 'Pedir foto' },
@@ -27,6 +28,7 @@ function formatFecha(f) {
 
 // ── Panel detalle repositor ────────────────────────────────────────────────────
 function PanelRepositor({ repo, localesTodos, onClose, onActualizado }) {
+  const { toast, confirmar } = useNotif();
   const [tab, setTab] = useState('info');
   const [tareas, setTareas] = useState([]);
   const [cargandoTareas, setCargandoTareas] = useState(false);
@@ -72,16 +74,18 @@ function PanelRepositor({ repo, localesTodos, onClose, onActualizado }) {
       setNuevaTarea({ tipo: 'foto', descripcion: '' });
       setMostrarFormTarea(false);
       cargarTareas();
-    } catch { alert('Error al crear tarea'); }
+      toast('Tarea enviada', 'success');
+    } catch { toast('Error al crear tarea', 'error'); }
     finally { setCreandoTarea(false); }
   }
 
   async function eliminarTarea(id) {
-    if (!confirm('¿Eliminar esta tarea?')) return;
+    if (!await confirmar('¿Eliminar esta tarea?', 'danger')) return;
     try {
       await axios.delete(`/api/repositores/tareas/${id}`);
       cargarTareas();
-    } catch { alert('Error al eliminar tarea'); }
+      toast('Tarea eliminada', 'info');
+    } catch { toast('Error al eliminar tarea', 'error'); }
   }
 
   async function guardarLocales() {
@@ -89,8 +93,8 @@ function PanelRepositor({ repo, localesTodos, onClose, onActualizado }) {
     try {
       await axios.post(`/api/repositores/${repo.id}/locales`, { local_ids: localesSel });
       onActualizado();
-      alert('Locales actualizados');
-    } catch { alert('Error al guardar locales'); }
+      toast('Locales actualizados', 'success');
+    } catch { toast('Error al guardar locales', 'error'); }
     finally { setGuardandoLocales(false); }
   }
 
@@ -99,8 +103,8 @@ function PanelRepositor({ repo, localesTodos, onClose, onActualizado }) {
     try {
       await axios.put(`/api/repositores/${repo.id}`, { objetivo_semanal: objSemanal === '' ? null : parseFloat(objSemanal) });
       onActualizado();
-      alert('Objetivo actualizado');
-    } catch { alert('Error al guardar objetivo'); }
+      toast('Objetivo actualizado', 'success');
+    } catch { toast('Error al guardar objetivo', 'error'); }
     finally { setGuardandoObj(false); }
   }
 

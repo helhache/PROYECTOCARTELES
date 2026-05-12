@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
+import { useNotif } from '../../context/NotifContext';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const colorTipo = { nacional: { bg: '#d9770620', color: '#f6ad55' }, regional: { bg: '#6c63ff20', color: '#a78bfa' } };
 
 // ── Sub-componente: panel de locales de una empresa ───────────────────────────
 function PanelLocales({ empresa, onClose }) {
+  const { toast, confirmar } = useNotif();
   const [locales, setLocales] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [modalLocal, setModalLocal] = useState(false);
@@ -62,8 +64,9 @@ function PanelLocales({ empresa, onClose }) {
   }
 
   async function desactivarLocal(id) {
-    if (!confirm('¿Desactivar este local?')) return;
+    if (!await confirmar('¿Desactivar este local?', 'danger')) return;
     await axios.delete(`/api/locales/${id}`);
+    toast('Local desactivado', 'info');
     cargarLocales();
   }
 
@@ -216,6 +219,7 @@ function PanelLocales({ empresa, onClose }) {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function AdminEmpresas() {
+  const { toast, confirmar } = useNotif();
   const [empresas, setEmpresas] = useState([]);
   const [empresaSel, setEmpresaSel] = useState(null);
   const [modalEmp, setModalEmp] = useState(false);
@@ -249,8 +253,9 @@ export default function AdminEmpresas() {
 
   const desactivar = async (id, ev) => {
     ev.stopPropagation();
-    if (!confirm('¿Desactivar esta empresa?')) return;
+    if (!await confirmar('¿Desactivar esta empresa?', 'danger')) return;
     await axios.delete(`/api/empresas/${id}`);
+    toast('Empresa desactivada', 'info');
     cargar();
   };
 
